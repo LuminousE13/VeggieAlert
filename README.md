@@ -1,5 +1,7 @@
 # Veggie Alert
-<img width="200" height="200" alt="Untitled design" src="https://github.com/user-attachments/assets/fb9af4ad-ace7-424f-80cf-65d11cc85343" />
+<p align="center">
+<img width="200" height="200" alt="Untitled design" src="https://github.com/user-attachments/assets/fb9af4ad-ace7-424f-80cf-65d11cc85343"  />
+</p>
 
 Have you ever needed a grocery item, but you didn't want to check every store? Well, that is what Veggie Alert is for.
 It finds groceries in stores around your area filtered by price and distance. 
