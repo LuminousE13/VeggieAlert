@@ -4,7 +4,7 @@ import { getUnitPrice } from "@/lib/units";
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const term = searchParams.get("term");
-    const locationId = searchParams.get("locationId");
+    const locationId = searchParams.get("locationId");  //stating parameters
 
     if (!term || !locationId) {
         return Response.json(
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     );
     const data = await res.json();
 
-//error check cause it said sum bs
+//error check cause it said sum weird
     if (!res.ok || !data.data) {
         console.log("Kroger error:", data);
         return Response.json(
@@ -29,10 +29,10 @@ export async function GET(req: Request) {
         );
     }
 
-    const products = data.data
+    const products = data.data //this actually gets data from store
         .map((product: any) => {
-            const item = product.items?.[0];
-            const regular = item?.price?.regular;
+            const item = product.items?.[0];  //pulls first item from array f
+            const regular = item?.price?.regular;  //this gets product data
             const promo = item?.price?.promo;
             const price = promo > 0 ? promo : regular;
             const unit = price !== undefined ? getUnitPrice(price, item?.size) : null;
