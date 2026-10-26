@@ -65,6 +65,15 @@ export async function searchProducts(
             const promo = item?.price?.promo;
             const price = promo > 0 ? promo : regular;
             const unit = price !== undefined ? getUnitPrice(price, item?.size) : null;
+            const images = product.images ?? [];
+            const mainImage =
+                images.find((img: any) => img.featured) ??
+                images.find((img: any) => img.perspective === "front") ??
+                images[0];
+            const image =
+                mainImage?.sizes?.find((s: any) => s.size === "medium")?.url ??
+                mainImage?.sizes?.[0]?.url ??
+                null; //why the heck is getting images so hard
 
             return {
                 id: product.productId,
@@ -76,6 +85,7 @@ export async function searchProducts(
                 onSale: promo > 0,
                 unitPrice: unit?.unitPrice ?? null,
                 unitLabel: unit?.unitLabel ?? null,
+                image,
             };
         })
         .filter((p: any) => p.price !== undefined);

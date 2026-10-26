@@ -1,69 +1,107 @@
-import Image from "next/image";
+'use client';
+import {useEffect, useState} from 'react';
+import SearchBar from '../components/SearchBar';
+import ProductCard from "@/components/ProductCard";
+import {Product} from '@/lib/types'
+import Link from 'next/link';
+import { addToHistory } from '@/lib/history';
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+type Location = { lat: number; lon: number };
+
+export default function Search () {
+    const [results, setResults] = useState<Product[]>([]);
+    const [location, setLocation] = useState<Location | null>(null);
+    const [message, setMessage] = useState('');
+    const [searchKey, setSearchKey] = useState(0);
+
+    useEffect(() => {
+        if (!navigator.geolocation) {
+            setMessage("Your browser doesn't support location.");
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (position) =>
+                setLocation({
+                    lat: position.coords.latitude,
+                    lon: position.coords.longitude,
+                }),
+            () => setMessage('Allow location access')
+        );
+    }, []);
+
+    async function handleSearch(term: string) {
+        if (!location) {
+            setMessage("Location not enabled");
+            return;
+        }
+        setMessage('');
+
+        const response = await fetch(`/api/search?term=${encodeURIComponent(term)}&lat=${location.lat}&lon=${location.lon}`)
+        const data = await response.json()
+
+        if (!response.ok) {
+            setMessage(data.error ?? 'Search failed');
+            return;
+        }
+        setResults(data.results)
+        addToHistory(term);
+    }
+    function handleReset() {
+        setResults([]);
+        setMessage('');
+        setSearchKey((k) => k + 1); //I didn't know I could do this w google
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    return (
+        <div className="flex min-h-screen flex-col bg-gray-50">
+
+            {/* Title bar */}
+            <header className="sticky top-0 z-10 relative border-b border-gray-300 bg-white/80 backdrop-blur">
+                <Link
+                    href="/history"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border border-gray-500 bg-white px-3 py-1.5 text-xs font-medium text-gray-900 transition hover:bg-gray-100"
+                >
+                    History
+                </Link>
+
+                <div className="mx-auto flex max-w-5xl items-center justify-center px-6 py-4">
+                    <button
+                        type="button"
+                        onClick={handleReset}
+                        aria-label="Veggie Alert, clear search"
+                        className="rounded-lg transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-200"
+                    >
+                        <img src="/VeggieTracksTitle.svg" alt="" className="h-16 w-auto max-w-full" />
+                    </button>
+                </div>
+            </header>
+
+            {/* Subtitle */}
+            <p className="pt-3 text-center text-sm tracking-wide text-gray-500">
+                Find your food!!!
+            </p>
+
+            {/* Search and results */}
+            <main
+                className={`flex flex-1 flex-col items-center px-6 ${
+                    results.length === 0 ? "justify-center pb-24" : "pt-8"
+                }`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+                <SearchBar key={searchKey} onSearch={handleSearch} />
+                {message && <p className="mt-3 text-sm text-red-600">{message}</p>}
+
+                {results.length > 0 && (
+                    <div className="mt-8 flex w-full max-w-xl flex-col gap-6 pb-12">
+                        {results.map((product) => (
+                            <ProductCard
+                                key={`${product.id}-${product.store.id}`}
+                                product={product}
+                            />
+                        ))}
+                    </div>
+                )}
+            </main>
+
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+    );
 }
